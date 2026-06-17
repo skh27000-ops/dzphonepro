@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DZMobile Pro — Espace Vente</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #06080d;
+    --elevated: #0d1117;
+    --card: rgba(14,20,32,0.72);
+    --border: rgba(0,229,255,0.1);
+    --accent: #00e5ff;
+    --accent-soft: rgba(0,229,255,0.12);
+    --accent-glow: rgba(0,229,255,0.25);
+    --fg: #e4e9f0;
+    --muted: #6b7d96;
+    --orange: #ff9100;
+    --cyan: #00e5ff;
+    --blue: #2962ff;
+    --rose: #ff4081;
+    --green: #00e676;
+    
+    --glass-bg: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.06);
+    --btn-sec-border: rgba(228,233,240,0.15);
+    --icon-text: #06080d;
+  }
+
+  [data-theme="light"] {
+    --bg: #f8fafc;
+    --elevated: #ffffff;
+    --card: rgba(255,255,255,0.85);
+    --border: rgba(0,180,216,0.2);
+    --accent: #00b4d8;
+    --accent-soft: rgba(0,180,216,0.12);
+    --accent-glow: rgba(0,180,216,0.2);
+    --fg: #0f172a;
+    --muted: #475569;
+    
+    --glass-bg: rgba(0,0,0,0.03);
+    --glass-border: rgba(0,0,0,0.08);
+    --btn-sec-border: rgba(15,23,42,0.15);
+    --icon-text: #ffffff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--accent-soft) var(--bg); transition: background-color 0.3s; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--fg); overflow:hidden; transition: background-color 0.3s, color 0.3s; height: 100vh; display: flex; }
+  h1,h2,h3,h4,h5,h6,.font-display { font-family:'Space Grotesk',sans-serif; }
+
+  /* ---- Print Styles ---- */
+  #print-area { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    html, body { background: white !important; color: black !important; margin: 0; padding: 0; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area {
+      display: block; position: absolute; left: 0; top: 0;
+      width: 80mm; /* Largeur standard ticket de caisse */
+      padding: 5mm;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: black !important;
+      background: white !important;
+    }
+    .print-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed black; padding-bottom: 5px; }
+    .print-title { font-family: 'Space Grotesk', sans-serif; font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+    .print-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .print-total { font-weight: bold; font-size: 14px; border-top: 1px dashed black; padding-top: 5px; margin-top: 5px; display: flex; justify-content: space-between; }
+    .print-footer { text-align: center; margin-top: 10px; font-size: 10px; border-top: 1px dashed black; padding-top: 5px; }
+    * { box-shadow: none !important; text-shadow: none !important; }
+  }
+
+  /* ---- Particules canvas ---- */
+  #particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* ---- Blobs de fond ---- */
+  .blob {
+    position:absolute; border-radius:50%; filter:blur(120px); opacity:0.35;
+    animation: blobFloat 12s ease-in-out infinite alternate; pointer-events:none; z-index:0;
+  }
+  @keyframes blobFloat {
+    0% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px,-40px) scale(1.1); }
+    100% { transform: translate(-20px,20px) scale(0.95); }
+  }
+
+  /* ---- Modals ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-content {
+    background: var(--elevated); border: 1px solid var(--glass-border); border-radius: 20px;
+    padding: 30px; width: 400px; max-width: 90%; transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+  .modal-overlay.active .modal-content { transform: translateY(0); }
+
+  /* ---- Utilities ---- */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .badge {
+    display:inline-flex; align-items:center; gap:6px;
+    padding: 6px 16px; border-radius:99px; font-size:0.8rem; font-weight:600;
+    background: var(--accent-soft); color:var(--accent);
+    border: 1px solid rgba(0,229,255,0.15);
+    letter-spacing: 0.03em;
+  }
+
+  .mock-status {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 12px; border-radius:99px; font-size:0.75rem; font-weight:600;
+  }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding: 12px 24px; border-radius:12px; font-weight:600;
+    font-family:'Space Grotesk',sans-serif; font-size:0.9rem;
+    background: var(--accent); color:var(--icon-text);
+    border:none; cursor:pointer;
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    text-decoration:none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--accent-glow), 0 0 40px rgba(0,229,255,0.15);
+  }
+
+  .btn-secondary {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding: 12px 24px; border-radius:12px; font-weight:600;
+    font-family:'Space Grotesk',sans-serif; font-size:0.9rem;
+    background: transparent; color:var(--fg);
+    border: 1.5px solid var(--btn-sec-border);
+    cursor:pointer; transition:all 0.3s; text-decoration:none;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent); color:var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ---- Cards ---- */
+  .glass-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    backdrop-filter: blur(12px) saturate(1.5);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    z-index: 10;
+  }
+  .glass-card-hover:hover {
+    border-color: rgba(0,229,255,0.25);
+    box-shadow: 0 8px 48px rgba(0,229,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  /* ---- Layout ---- */
+  .app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    padding: 24px;
+    gap: 24px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+  }
+  .nav-item i { font-size: 1.1rem; width: 24px; text-align: center; }
+  
+  .nav-item:hover {
+    background: var(--glass-bg);
+    color: var(--fg);
+    border-color: var(--glass-border);
+    transform: translateX(4px);
+  }
+  
+  .nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: rgba(0,229,255,0.2);
+    box-shadow: 0 4px 20px rgba(0,229,255,0.05);
+  }
+
+  /* ---- Main Content ---- */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .sections-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 12px;
+    padding-bottom: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-soft) transparent;
+  }
+  .sections-wrapper::-webkit-scrollbar { width: 6px; }
+  .sections-wrapper::-webkit-scrollbar-thumb { background: var(--accent-soft); border-radius: 10px; }
+
+  .content-section {
+    display: none;
+    animation: fadeSlideUp 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .content-section.active { display: block; }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-title {
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+
+  /* ---- Table Mockup ---- */
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .mock-table th { text-align: left; padding: 16px; border-bottom: 1px solid var(--glass-border); color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mock-table td { padding: 18px 16px; border-bottom: 1px solid var(--glass-bg); color: var(--fg); }
+  .mock-table tr { transition: background-color 0.2s; }
+  .mock-table tr:hover { background: rgba(255,255,255,0.02); }
+  [data-theme="light"] .mock-table tr:hover { background: rgba(0,0,0,0.02); }
+
+  /* ---- Specific Layouts ---- */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .mock-stat-card { padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+  .stat-val { font-family:'Space Grotesk',sans-serif; font-size: 2.2rem; font-weight: 700; color: var(--fg); }
+  .stat-label { font-size: 0.9rem; color: var(--muted); }
+  
+  .pos-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 24px; }
+  
+  .input-group { position: relative; width: 100%; margin-bottom: 24px;}
+  .input-group input, .input-group select {
+    width: 100%; padding: 18px 24px; padding-left: 50px;
+    background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+    border-radius: 16px; color: var(--fg); font-size: 1rem;
+    font-family: 'DM Sans',sans-serif;
+    transition: all 0.3s; outline: none;
+  }
+  .input-group select { padding-left: 24px; }
+  .input-group input:focus, .input-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); background: var(--card); }
+  .input-group i.fa-barcode { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.1rem; }
+
+  .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--glass-border); }
+  .cart-total { display: flex; justify-content: space-between; font-size: 1.6rem; font-weight: 700; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--glass-border); font-family: 'Space Grotesk', sans-serif;}
+
+  .item-card { text-align: center; padding: 24px 16px; cursor: pointer; }
+  .item-card i { font-size: 2.5rem; color: var(--accent); margin-bottom: 16px; transition: transform 0.3s; }
+  .item-card:hover i { transform: scale(1.1) rotate(-5deg); }
+  
+</style>
+<script>
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+</script>
+</head>
+<body>
+
+  <!-- Zone d'impression invisible -->
+  <div id="print-area">
+    <div class="print-header">
+      <div class="print-title">DZMobile Pro</div>
+      <div>123 Rue Principale, Alger</div>
+      <div>Tél: 0555 00 00 00</div>
+    </div>
+    <div style="margin-bottom: 10px; font-size: 11px;">
+      Date: <span id="print-date"></span><br>
+      Ticket N°: <span id="print-id"></span>
+    </div>
+    <div id="print-items" style="margin-bottom: 10px;">
+      <!-- Injecté via JS -->
+    </div>
+    <div class="print-total">
+      <span>TOTAL</span>
+      <span id="print-total-amount">0 DA</span>
+    </div>
+    <div class="print-footer">
+      Merci de votre visite !<br>
+      Les retours sont acceptés sous 48h.
+    </div>
+  </div>
+
+  <!-- Blobs décoratifs -->
+  <div class="blob" style="width:500px;height:500px;background:var(--accent);top:-100px;left:-150px;animation-delay:0s;"></div>
+  <div class="blob" style="width:400px;height:400px;background:var(--cyan);bottom:-50px;right:20%;animation-delay:-4s;opacity:0.2;"></div>
+  
+  <!-- Particules -->
+  <canvas id="particles"></canvas>
+
+  <div class="app-container">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar glass-card">
+      <a href="dashboard.html" class="sidebar-logo" style="margin-bottom:24px;">
+        <span class="font-display font-bold text-xl" style="color:var(--fg);">DZMobile <span style="color:var(--accent);">Pro</span></span>
+      </a>
+
+      <!-- WORKSPACE SWITCHER -->
+      <div style="display:flex; background:var(--glass-bg); border-radius:12px; padding:4px; margin-bottom:24px; border:1px solid var(--glass-border);">
+        <a href="vente.html" style="flex:1; text-align:center; padding:8px 0; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; background:var(--accent); color:var(--icon-text); box-shadow:0 2px 10px var(--accent-glow);">
+          <i class="fas fa-cart-shopping"></i> Vente
+        </a>
+        <a href="reparation.html" style="flex:1; text-align:center; padding:8px 0; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; color:var(--muted); transition:color 0.3s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">
+          <i class="fas fa-screwdriver-wrench"></i> Atelier
+        </a>
+      </div>
+
+      <div class="nav-links">
+        <div class="nav-item active" data-target="caisse">
+          <i class="fas fa-cash-register"></i> Caisse Rapide
+        </div>
+        <div class="nav-item" data-target="telephones">
+          <i class="fas fa-mobile-alt"></i> Téléphones
+        </div>
+        <div class="nav-item" data-target="pieces">
+          <i class="fas fa-puzzle-piece"></i> Pièces & Articles
+        </div>
+        <div class="nav-item" data-target="etiquettes">
+          <i class="fas fa-tags"></i> Étiquettes & Stock
+        </div>
+        <div class="nav-item" data-target="achats">
+          <i class="fas fa-truck-ramp-box"></i> Achats & Rachats
+        </div>
+        <div class="nav-item" data-target="rapports">
+          <i class="fas fa-chart-simple"></i> Rapports Inventaire
+        </div>
+        <div class="nav-item" data-target="imprimante" style="margin-top: 16px; border-top: 1px dashed var(--glass-border); padding-top: 24px; border-radius: 0;">
+          <i class="fas fa-print"></i> Paramètres Imprimante
+        </div>
+      </div>
+
+      <div style="margin-top: auto;">
+        <div style="padding: 16px; border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 16px;">
+          <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 4px;">Connecté en tant que</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--icon-text); display:flex; align-items:center; justify-content:center; font-weight:700;">A</div>
+            <div style="font-weight: 600; font-size: 0.9rem;">Admin</div>
+          </div>
+        </div>
+        <a href="dashboard.html" class="btn-secondary" style="width: 100%;">
+          <i class="fas fa-arrow-left"></i> Quitter la Vente
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <div class="top-bar">
+        <div class="badge">
+          <i class="fas fa-cart-shopping" style="font-size:0.75rem;"></i> Espace Vente
+        </div>
+        <div style="display:flex; gap:16px; align-items:center;">
+          <button class="btn-secondary" style="padding:4px 12px; font-weight:700; font-size:0.85rem; border-color:var(--glass-border); border-radius:8px;" onclick="toggleLanguage()">
+            <span id="lang-btn-text">AR</span>
+          </button>
+          <button class="theme-toggle" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;transition:color 0.3s;" aria-label="Toggle theme">
+            <i class="fas fa-sun toggle-icon"></i>
+          </button>
+          <div class="glass-card" style="padding:8px 16px; border-radius:12px; display:flex; align-items:center; gap:8px;">
+            <div style="width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow: 0 0 10px var(--accent);"></div>
+            <span style="font-size:0.85rem; font-weight:600;">Caisse Ouverte</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sections-wrapper">
+        
+        <!-- Section: Caisse -->
+        <div id="caisse" class="content-section active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+            <h2 class="page-title gradient-text" style="margin:0;">Caisse Rapide</h2>
+          </div>
+          
+          <div class="pos-grid">
+            <div>
+              <div class="input-group">
+                <i class="fas fa-barcode"></i>
+                <input type="text" placeholder="Scanner un code-barres (IMEI, Accessoire) ou chercher...">
+              </div>
+              
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:20px;" id="caisse-items-grid">
+                <!-- Les articles scannés ou fréquents apparaîtront ici -->
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding:30px; display:flex; flex-direction:column; max-height:calc(100vh - 180px);">
+              <h3 class="font-display" style="font-size:1.4rem;margin-bottom:24px;">Ticket de caisse</h3>
+              <div style="flex:1; overflow-y:auto; margin-bottom:24px; padding-right:8px;" id="cart-items">
+                <!-- Panier vide -->
+                <div style="text-align:center; padding:40px 0; color:var(--muted);">
+                  <i class="fas fa-shopping-basket" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i>
+                  <div style="font-size:0.9rem;">Le panier est vide</div>
+                </div>
+              </div>
+              <div class="cart-total">
+                <span style="color:var(--muted); font-size:1.2rem; font-weight:500;">Total</span>
+                <span style="color:var(--accent);" id="cart-total-amount">0 DA</span>
+              </div>
+              <button class="btn-primary" style="width:100%; padding:18px; font-size:1.1rem; margin-top:24px;" onclick="printSaleReceipt()">
+                <i class="fas fa-print"></i> Encaisser & Imprimer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Téléphones -->
+        <div id="telephones" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Gestion Téléphones</h2>
+              <p style="color:var(--muted); font-size:1rem;">Suivez l'état, l'IMEI et le stock de vos téléphones.</p>
+            </div>
+            <button class="btn-primary"><i class="fas fa-plus"></i> Ajouter Téléphone</button>
+          </div>
+          
+          <div class="glass-card" style="padding:10px;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th>Modèle</th>
+                  <th>IMEI / Série</th>
+                  <th>État</th>
+                  <th>Prix de Vente</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="telephones-tbody">
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">Aucun téléphone enregistré. Cliquez sur "Ajouter" pour commencer.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section: Pièces -->
+        <div id="pieces" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Pièces & Articles</h2>
+              <p style="color:var(--muted); font-size:1rem;">Gérez vos accessoires, incassables et pièces détachées.</p>
+            </div>
+            <button class="btn-primary"><i class="fas fa-plus"></i> Nouvel Article</button>
+          </div>
+          
+          <div class="glass-card" style="padding:10px;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Catégorie</th>
+                  <th>Prix Achat</th>
+                  <th>Prix Vente</th>
+                  <th>Quantité</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="pieces-tbody">
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">Aucun article en stock.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section: Étiquettes -->
+        <div id="etiquettes" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Étiquettes & Stock</h2>
+              <p style="color:var(--muted); font-size:1rem;">Imprimez vos codes-barres et surveillez vos ruptures.</p>
+            </div>
+            <button class="btn-primary"><i class="fas fa-print"></i> Imprimer Sélection</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="glass-card mock-stat-card" style="border-color:rgba(255,64,129,0.3); box-shadow: 0 0 20px rgba(255,64,129,0.05);">
+              <div class="stat-label" style="color:var(--rose); font-weight:600;">Alertes Rupture Imminente</div>
+              <div class="stat-val" style="color:var(--rose);">0 <span style="font-size:1rem;font-weight:400;">articles</span></div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Total Articles Étiquetés</div>
+              <div class="stat-val">0</div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Valeur du Stock Bas</div>
+              <div class="stat-val" style="color:var(--muted);">0 <span style="font-size:1rem;font-weight:400;">DA</span></div>
+            </div>
+          </div>
+
+          <div class="glass-card" style="padding:10px;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;"><input type="checkbox" style="accent-color:var(--accent);"></th>
+                  <th>Article</th>
+                  <th>Catégorie</th>
+                  <th>Code-barres généré</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody id="etiquettes-tbody">
+                <tr>
+                  <td colspan="5" style="text-align:center; color:var(--muted); padding:30px;">Aucune étiquette sélectionnée.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section: Achats -->
+        <div id="achats" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Achats & Rachats</h2>
+              <p style="color:var(--muted); font-size:1rem;">Suivez les arrivages fournisseurs et rachats d'occasion.</p>
+            </div>
+            <div style="display:flex;gap:12px;">
+              <button class="btn-secondary"><i class="fas fa-truck"></i> Achat Gros</button>
+              <button class="btn-primary"><i class="fas fa-hand-holding-usd"></i> Rachat Occasion</button>
+            </div>
+          </div>
+
+          <div class="glass-card" style="padding:10px;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type d'Opération</th>
+                  <th>Client / Fournisseur</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody id="achats-tbody">
+                <tr>
+                  <td colspan="5" style="text-align:center; color:var(--muted); padding:30px;">Aucune opération récente.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section: Rapports -->
+        <div id="rapports" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Rapports d'Inventaire</h2>
+              <p style="color:var(--muted); font-size:1rem;">Analyse complète de vos flux d'inventaire.</p>
+            </div>
+            <button class="btn-secondary"><i class="fas fa-file-pdf"></i> Exporter PDF</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Valeur totale du stock actuel</div>
+              <div class="stat-val gradient-text" id="stat-valeur">0 DA</div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Entrées (30 derniers jours)</div>
+              <div class="stat-val" style="color:var(--accent);" id="stat-entrees">0 <span style="font-size:1rem;font-weight:400;color:var(--muted);">articles</span></div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Sorties / Ventes (30 jours)</div>
+              <div class="stat-val" style="color:var(--orange);" id="stat-sorties">0 <span style="font-size:1rem;font-weight:400;color:var(--muted);">articles</span></div>
+            </div>
+          </div>
+
+          <div class="glass-card" style="padding:30px;">
+            <h3 class="font-display" style="font-size:1.4rem; margin-bottom:24px;">Historique Récent des Mouvements</h3>
+            <div style="border-left: 2px solid var(--glass-border); padding-left:24px; display:flex; flex-direction:column; gap:24px;">
+              <div style="color:var(--muted); font-size:0.9rem;">Aucun mouvement enregistré.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: IMPRIMANTE -->
+        <div id="imprimante" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Configuration Imprimante</h2>
+              <p style="color:var(--muted); font-size:1rem;">Gérez l'impression de vos reçus et tickets de caisse via le Wi-Fi.</p>
+            </div>
+            <button class="btn-primary" onclick="testPrint()"><i class="fas fa-print"></i> Lancer une impression test</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+            <div class="glass-card" style="padding:30px;">
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+                <div style="width:60px; height:60px; border-radius:16px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--accent);">
+                  <i class="fas fa-print"></i>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.4rem;">Statut de la connexion</h3>
+                  <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <div style="width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green);"></div>
+                    <span style="color:var(--green); font-weight:600;">Prêt à imprimer</span>
+                  </div>
+                </div>
+              </div>
+              <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:24px;">
+                Le système utilise la connexion native de votre navigateur. Assurez-vous que votre imprimante thermique est allumée et connectée au même réseau Wi-Fi que cet appareil (PC/Tablette).
+              </p>
+              <div class="input-group">
+                <select style="appearance:none; padding-left:16px;">
+                  <option>Ticket Thermique (80mm) - Recommandé</option>
+                  <option>Ticket Thermique (58mm)</option>
+                  <option>Format A4 Standard</option>
+                </select>
+                <i class="fas fa-chevron-down" style="position:absolute; right:20px; top:50%; pointer-events:none; color:var(--muted); font-size: 1rem !important;"></i>
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding:30px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+              <i class="fas fa-receipt" style="font-size:4rem; color:var(--muted); margin-bottom:20px; opacity:0.5;"></i>
+              <h3 class="font-display" style="font-size:1.2rem; margin-bottom:12px;">Comment imprimer ?</h3>
+              <p style="color:var(--muted); font-size:0.9rem; line-height:1.6;">
+                1. Cliquez sur "Encaisser & Imprimer".<br>
+                2. La fenêtre système s'ouvre.<br>
+                3. Sélectionnez votre imprimante Wi-Fi dans la liste.<br>
+                4. Décochez "Marges" et "En-têtes et pieds de page" dans les options pour un ticket propre.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="phoneModal" class="modal-overlay">
+      <div class="modal-content glass-card">
+        <h3 class="font-display" style="font-size:1.4rem; margin-bottom:20px; color:var(--accent);">Ajouter Téléphone</h3>
+        <div class="form-grid">
+          <div class="input-group full-width">
+            <label>Modèle du téléphone</label>
+            <input type="text" id="phoneModel" placeholder="Ex: iPhone 13 Pro">
+          </div>
+          <div class="input-group full-width">
+            <label>IMEI / N° de Série</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="phoneImei" placeholder="Ex: 352345678901234" style="flex:1;">
+              <button class="btn-secondary" style="padding:0 16px; font-size:1.2rem; color:var(--accent); border-color:var(--accent-soft);" title="Scanner via l'appareil photo" onclick="document.getElementById('imeiPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+              </button>
+              <input type="file" id="imeiPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="simulateImeiScan(this)">
+            </div>
+          </div>
+          <div class="input-group full-width">
+            <label>Prix de vente (DA)</label>
+            <input type="number" id="phonePrice" placeholder="Ex: 125000">
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:24px;">
+          <button class="btn-secondary" style="flex:1;" onclick="closeModal('phoneModal')">Annuler</button>
+          <button class="btn-primary" style="flex:1;" onclick="savePhone()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="accModal" class="modal-overlay">
+      <div class="modal-content glass-card">
+        <h3 class="font-display" style="font-size:1.4rem; margin-bottom:20px; color:var(--accent);">Nouvel Article</h3>
+        <div class="form-grid">
+          <div class="input-group full-width">
+            <label>Nom de l'article</label>
+            <input type="text" id="accName" placeholder="Ex: Chargeur Rapide 20W">
+          </div>
+          <div class="input-group full-width">
+            <label>Quantité en stock</label>
+            <input type="number" id="accStock" placeholder="Ex: 50">
+          </div>
+          <div class="input-group full-width">
+            <label>Prix de vente (DA)</label>
+            <input type="number" id="accPrice" placeholder="Ex: 2500">
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:24px;">
+          <button class="btn-secondary" style="flex:1;" onclick="closeModal('accModal')">Annuler</button>
+          <button class="btn-primary" style="flex:1;" onclick="saveAccessory()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* ===== TRANSLATION LOGIC ===== */
+  const translations = {
+    "Caisse Rapide": "الصندوق السريع",
+    "Téléphones": "الهواتف",
+    "Pièces & Articles": "القطع والاكسسوارات",
+    "Étiquettes & Stock": "الملصقات والمخزون",
+    "Achats & Rachats": "المشتريات",
+    "Rapports Inventaire": "تقارير المخزون",
+    "Paramètres Imprimante": "إعدادات الطابعة",
+    "Connecté en tant que": "مسجل كـ",
+    "Quitter la Vente": "الخروج من البيع",
+    "Espace Vente": "مساحة البيع",
+    "Caisse Ouverte": "الصندوق مفتوح",
+    "Scanner un code-barres (IMEI, Accessoire) ou chercher...": "امسح الباركود (IMEI، ملحق) أو ابحث...",
+    "Ticket de caisse": "تذكرة الصندوق",
+    "Le panier est vide": "السلة فارغة",
+    "Total": "المجموع",
+    "Encaisser & Imprimer": "دفع وطباعة",
+    "Gestion Téléphones": "إدارة الهواتف",
+    "Ajouter Téléphone": "إضافة هاتف",
+    "Modèle": "الموديل",
+    "IMEI / Série": "رقم تسلسلي / IMEI",
+    "État": "الحالة",
+    "Prix de Vente": "سعر البيع",
+    "Statut": "الوضع",
+    "Actions": "إجراءات",
+    "Aucun téléphone en stock. Cliquez sur \"Ajouter Téléphone\".": "لا توجد هواتف في المخزون. انقر على \"إضافة هاتف\".",
+    "Nouvel Article": "مقال جديد",
+    "Article": "مقال",
+    "Catégorie": "فئة",
+    "Prix Achat": "سعر الشراء",
+    "Quantité": "الكمية",
+    "Aucun article en stock. Cliquez sur \"Nouvel Article\".": "لا توجد مقالات في المخزون. انقر على \"مقال جديد\".",
+    "Modèle du téléphone": "موديل الهاتف",
+    "IMEI / N° de Série": "رقم تسلسلي / IMEI",
+    "Prix de vente (DA)": "سعر البيع (بالدينار)",
+    "Nom de l'article": "اسم المقال",
+    "Quantité en stock": "الكمية في المخزون",
+    "En stock": "في المخزون",
+    "Accessoire": "اكسسوار",
+    "Votre stock est vide. Allez dans Téléphones ou Pièces pour en ajouter.": "مخزونك فارغ. اذهب إلى الهواتف أو القطع للإضافة.",
+    "Annuler": "إلغاء",
+    "Enregistrer": "حفظ",
+    "Vente": "بيع",
+    "Atelier": "ورشة",
+    "Valeur totale du stock actuel": "إجمالي قيمة المخزون الحالي",
+    "Entrées (30 derniers jours)": "المداخل (آخر 30 يومًا)",
+    "Sorties / Ventes (30 jours)": "المبيعات (آخر 30 يومًا)"
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'fr';
+
+  function applyTranslations(root) {
+    if (currentLang === 'fr') return;
+    
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    const nodesToReplace = [];
+    while(node = walker.nextNode()) {
+      const text = node.nodeValue.trim();
+      if(translations[text]) {
+        const leading = node.nodeValue.match(/^\s*/)[0];
+        const trailing = node.nodeValue.match(/\s*$/)[0];
+        nodesToReplace.push({node, text: leading + translations[text] + trailing});
+      }
+    }
+    nodesToReplace.forEach(item => item.node.nodeValue = item.text);
+    
+    root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        const ph = el.getAttribute('placeholder');
+        if(translations[ph]) el.setAttribute('placeholder', translations[ph]);
+    });
+  }
+
+  function toggleLanguage() {
+    currentLang = currentLang === 'fr' ? 'ar' : 'fr';
+    localStorage.setItem('lang', currentLang);
+    window.location.reload();
+  }
+
+  function initLanguage() {
+    const btn = document.getElementById('lang-btn-text');
+    if (currentLang === 'ar') {
+        document.documentElement.dir = 'rtl';
+        if(btn) btn.innerText = 'FR';
+    } else {
+        document.documentElement.dir = 'ltr';
+        if(btn) btn.innerText = 'AR';
+    }
+  }
+  initLanguage();
+  document.addEventListener('DOMContentLoaded', () => applyTranslations(document.body));
+
+  // Tabs Navigation
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.content-section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(nav => nav.classList.remove('active'));
+      sections.forEach(sec => sec.classList.remove('active'));
+      
+      item.classList.add('active');
+      const targetId = item.getAttribute('data-target');
+      document.getElementById(targetId).classList.add('active');
+    });
+  });
+
+  // Theme Toggle
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcons(newTheme);
+  }
+
+  function updateThemeIcons(theme) {
+    const isLight = theme === 'light';
+    document.querySelectorAll('.toggle-icon').forEach(icon => {
+      icon.className = isLight ? 'fas fa-moon toggle-icon' : 'fas fa-sun toggle-icon';
+    });
+  }
+
+  const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  updateThemeIcons(initialTheme);
+
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.addEventListener('click', toggleTheme);
+  });
+
+  /* ===== APPLICATION STATE (localStorage) ===== */
+  let inventory = JSON.parse(localStorage.getItem('dz_inventory')) || [];
+  let cart = [];
+  let sales = JSON.parse(localStorage.getItem('dz_sales')) || [];
+
+  function saveData() {
+    localStorage.setItem('dz_inventory', JSON.stringify(inventory));
+    localStorage.setItem('dz_sales', JSON.stringify(sales));
+    renderAll();
+  }
+
+  /* ===== MODAL LOGIC ===== */
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  /* ===== ADD ITEM LOGIC ===== */
+  function simulateImeiScan(input) {
+    if (!input.files || input.files.length === 0) return;
+    const imeiField = document.getElementById('phoneImei');
+    
+    const originalPlaceholder = imeiField.placeholder;
+    imeiField.value = '';
+    imeiField.placeholder = "Analyse de l'image en cours...";
+    imeiField.disabled = true;
+    
+    setTimeout(() => {
+      const randomImei = '35' + Math.floor(Math.random() * 10000000000000).toString().padStart(13, '0');
+      imeiField.value = randomImei;
+      imeiField.placeholder = originalPlaceholder;
+      imeiField.disabled = false;
+      input.value = '';
+    }, 1500);
+  }
+
+  function addPhone() {
+    document.getElementById('phoneModel').value = '';
+    document.getElementById('phoneImei').value = '';
+    document.getElementById('phonePrice').value = '';
+    openModal('phoneModal');
+  }
+
+  function savePhone() {
+    const model = document.getElementById('phoneModel').value;
+    const imei = document.getElementById('phoneImei').value;
+    const price = parseFloat(document.getElementById('phonePrice').value);
+    
+    if(!model || !price) { alert("Veuillez remplir le modèle et le prix."); return; }
+    
+    inventory.push({ id: Date.now().toString(), type: 'phone', model, imei, price, status: 'En stock' });
+    saveData();
+    closeModal('phoneModal');
+  }
+
+  function addAccessory() {
+    document.getElementById('accName').value = '';
+    document.getElementById('accStock').value = '';
+    document.getElementById('accPrice').value = '';
+    openModal('accModal');
+  }
+
+  function saveAccessory() {
+    const name = document.getElementById('accName').value;
+    const stock = parseInt(document.getElementById('accStock').value);
+    const price = parseFloat(document.getElementById('accPrice').value);
+    
+    if(!name || !stock || !price) { alert("Veuillez remplir tous les champs."); return; }
+
+    inventory.push({ id: Date.now().toString(), type: 'accessory', name, stock, price });
+    saveData();
+    closeModal('accModal');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnAddPhone = document.querySelector('#telephones .btn-primary');
+    if(btnAddPhone) btnAddPhone.onclick = addPhone;
+    
+    const btnAddAcc = document.querySelector('#pieces .btn-primary');
+    if(btnAddAcc) btnAddAcc.onclick = addAccessory;
+
+    renderAll();
+  });
+
+  /* ===== RENDER LOGIC ===== */
+  function renderAll() {
+    renderInventoryTables();
+    renderCaisseGrid();
+    renderCart();
+    updateStats();
+    if(currentLang === 'ar') applyTranslations(document.body);
+  }
+
+  function renderInventoryTables() {
+    const phonesTable = document.getElementById('telephones-tbody');
+    const piecesTable = document.getElementById('pieces-tbody');
+
+    if(phonesTable) {
+      const phones = inventory.filter(i => i.type === 'phone');
+      if(phones.length === 0) {
+        phonesTable.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">Aucun téléphone en stock. Cliquez sur "Ajouter Téléphone".</td></tr>';
+      } else {
+        phonesTable.innerHTML = phones.map(p => `
+          <tr>
+            <td style="font-weight:600;">${p.model}</td>
+            <td style="font-family:monospace; color:var(--muted);">${p.imei || '-'}</td>
+            <td>Neuf/Occasion</td>
+            <td style="font-weight:600; color:var(--accent);">${p.price} DA</td>
+            <td><span class="badge" style="background:rgba(0,229,255,0.1);color:var(--accent);">${p.status}</span></td>
+            <td><button class="btn-secondary" style="padding:4px 8px; font-size:0.8rem; color:var(--rose); border-color:var(--rose);" onclick="deleteItem('${p.id}')"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `).join('');
+      }
+    }
+    
+    if(piecesTable) {
+      const pieces = inventory.filter(i => i.type === 'accessory');
+      if(pieces.length === 0) {
+        piecesTable.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">Aucun article en stock. Cliquez sur "Nouvel Article".</td></tr>';
+      } else {
+        piecesTable.innerHTML = pieces.map(p => `
+          <tr>
+            <td style="font-weight:600;">${p.name}</td>
+            <td>Accessoire</td>
+            <td>-</td>
+            <td style="font-weight:600; color:var(--accent);">${p.price} DA</td>
+            <td style="font-weight:600;">${p.stock}</td>
+            <td><button class="btn-secondary" style="padding:4px 8px; font-size:0.8rem; color:var(--rose); border-color:var(--rose);" onclick="deleteItem('${p.id}')"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `).join('');
+      }
+    }
+  }
+
+  function deleteItem(id) {
+    if(confirm("Supprimer cet article ?")) {
+      inventory = inventory.filter(i => i.id !== id);
+      saveData();
+    }
+  }
+
+  /* ===== CAISSE / POS LOGIC ===== */
+  function renderCaisseGrid() {
+    const grid = document.getElementById('caisse-items-grid');
+    if(!grid) return;
+    
+    if(inventory.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">Votre stock est vide. Allez dans Téléphones ou Pièces pour en ajouter.</div>';
+      return;
+    }
+
+    grid.innerHTML = inventory.map(item => {
+      const name = item.type === 'phone' ? item.model : item.name;
+      const icon = item.type === 'phone' ? 'fa-mobile-alt' : 'fa-headphones';
+      const stockInfo = item.type === 'phone' ? '1 en stock' : `${item.stock} en stock`;
+      const isOutOfStock = item.type === 'accessory' && item.stock <= 0;
+      
+      return `
+        <div class="glass-card item-card" style="${isOutOfStock ? 'opacity:0.5; cursor:not-allowed;' : ''}" onclick="${isOutOfStock ? '' : `addToCart('${item.id}')`}">
+          <i class="fas ${icon}"></i>
+          <div style="font-weight:600; margin-bottom:4px;">${name}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;">${stockInfo}</div>
+          <div style="font-weight:700; color:var(--accent);">${item.price} DA</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addToCart(id) {
+    const item = inventory.find(i => i.id === id);
+    if(!item) return;
+
+    if(item.type === 'accessory') {
+      const cartItem = cart.find(c => c.id === id);
+      if(cartItem) {
+        if(cartItem.qty < item.stock) cartItem.qty++;
+        else alert("Stock insuffisant !");
+      } else {
+        if(item.stock > 0) cart.push({...item, qty: 1});
+      }
+    } else {
+      // Phone
+      const cartItem = cart.find(c => c.id === id);
+      if(cartItem) return;
+      cart.push({...item, qty: 1});
+    }
+    renderCart();
+  }
+
+  function removeFromCart(id) {
+    cart = cart.filter(c => c.id !== id);
+    renderCart();
+  }
+
+  function renderCart() {
+    const cartContainer = document.getElementById('cart-items');
+    const totalEl = document.getElementById('cart-total-amount');
+    
+    if(cart.length === 0) {
+      cartContainer.innerHTML = `
+        <div style="text-align:center; padding:40px 0; color:var(--muted);">
+          <i class="fas fa-shopping-basket" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i>
+          <div style="font-size:0.9rem;">Le panier est vide</div>
+        </div>`;
+      totalEl.innerText = '0 DA';
+      return;
+    }
+
+    let total = 0;
+    cartContainer.innerHTML = cart.map(item => {
+      total += item.price * item.qty;
+      const name = item.type === 'phone' ? item.model : item.name;
+      return `
+        <div class="cart-item">
+          <div>
+            <div style="font-weight:600;">${name}</div>
+            <div style="font-size:0.8rem; color:var(--muted);">${item.price} DA x ${item.qty}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="font-weight:700;">${item.price * item.qty} DA</div>
+            <button class="btn-secondary" style="padding:4px 8px; color:var(--rose); border:none;" onclick="removeFromCart('${item.id}')"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    totalEl.innerText = total + ' DA';
+  }
+
+  function updateStats() {
+    let totalValue = 0;
+    let totalItems = 0;
+    inventory.forEach(i => {
+        totalValue += i.price * (i.type === 'phone' ? 1 : i.stock);
+        totalItems += (i.type === 'phone' ? 1 : i.stock);
+    });
+    
+    let totalSold = 0;
+    sales.forEach(s => {
+        s.items.forEach(i => totalSold += i.qty);
+    });
+
+    const valEl = document.getElementById('stat-valeur');
+    const inEl = document.getElementById('stat-entrees');
+    const outEl = document.getElementById('stat-sorties');
+
+    if(valEl) valEl.innerText = totalValue + ' DA';
+    if(inEl) inEl.innerHTML = totalItems + ' <span style="font-size:1rem;font-weight:400;color:var(--muted);">en stock</span>';
+    if(outEl) outEl.innerHTML = totalSold + ' <span style="font-size:1rem;font-weight:400;color:var(--muted);">vendus</span>';
+  }
+
+  /* ===== PRINT & CHECKOUT LOGIC ===== */
+  function getFormattedDate() {
+    const d = new Date();
+    return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+  }
+
+  function printSaleReceipt() {
+    if(cart.length === 0) {
+      alert("Le panier est vide !");
+      return;
+    }
+
+    let total = 0;
+    let itemsHTML = '';
+    
+    cart.forEach(item => {
+      const name = item.type === 'phone' ? item.model : item.name;
+      const itemTotal = item.price * item.qty;
+      total += itemTotal;
+      itemsHTML += `<div class="print-row"><span>${item.qty}x ${name}</span><span>${itemTotal} DA</span></div>`;
+    });
+
+    document.getElementById('print-date').innerText = getFormattedDate();
+    document.getElementById('print-id').innerText = 'VTE-' + Math.floor(Math.random() * 10000);
+    document.getElementById('print-items').innerHTML = itemsHTML;
+    document.getElementById('print-total-amount').innerText = total + ' DA';
+    
+    window.print();
+    
+    checkout();
+  }
+
+  function checkout() {
+    let total = 0;
+    cart.forEach(cartItem => {
+      total += cartItem.price * cartItem.qty;
+      const invItem = inventory.find(i => i.id === cartItem.id);
+      if(invItem) {
+        if(invItem.type === 'accessory') {
+          invItem.stock -= cartItem.qty;
+        } else if (invItem.type === 'phone') {
+          inventory = inventory.filter(i => i.id !== invItem.id);
+        }
+      }
+    });
+
+    sales.push({ id: Date.now().toString(), date: new Date().toISOString(), total: total, items: [...cart] });
+    
+    cart = [];
+    saveData();
+  }
+
+  function testPrint() {
+    document.getElementById('print-date').innerText = getFormattedDate();
+    document.getElementById('print-id').innerText = 'TEST-' + Math.floor(Math.random() * 10000);
+    document.getElementById('print-items').innerHTML = `<div class="print-row"><span>1x Test d'impression Wi-Fi</span><span>0 DA</span></div>`;
+    document.getElementById('print-total-amount').innerText = '0 DA';
+    window.print();
+  }
+
+  /* ===== Particules Canvas ===== */
+  (function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [];
+    const PARTICLE_COUNT = 50;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    let mouse = { x: -1000, y: -1000 };
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const rgbColors = isLight ? '0,180,216' : '0,229,255';
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(0.1, p.r), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(' + rgbColors + ',' + p.opacity + ')';
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+          if (dist < 140) {
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = 'rgba(' + rgbColors + ',' + ((1 - dist/140)*0.15) + ')';
+            ctx.lineWidth = 0.6; ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+</script>
+</body>
+</html>

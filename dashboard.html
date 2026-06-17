@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DZMobile Pro — Choix de l'action</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #06080d;
+    --fg: #e4e9f0;
+    --muted: #6b7d96;
+    --accent: #00e5ff;
+    --accent-glow: rgba(0,229,255,0.25);
+    --glass-bg: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-hover: rgba(255,255,255,0.06);
+  }
+
+  [data-theme="light"] {
+    --bg: #f8fafc;
+    --fg: #0f172a;
+    --muted: #475569;
+    --accent: #00b4d8;
+    --accent-glow: rgba(0,180,216,0.2);
+    --glass-bg: rgba(0,0,0,0.03);
+    --glass-border: rgba(0,0,0,0.08);
+    --glass-hover: rgba(0,0,0,0.06);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { 
+    font-family:'DM Sans',sans-serif; 
+    background:var(--bg); 
+    color:var(--fg); 
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+  }
+
+  .font-display { font-family:'Space Grotesk',sans-serif; }
+
+  /* Blobs d'ambiance */
+  .blob {
+    position:absolute; border-radius:50%; filter:blur(100px); opacity:0.4;
+    animation: blobFloat 12s ease-in-out infinite alternate;
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes blobFloat {
+    0% { transform: translate(0,0) scale(1); }
+    100% { transform: translate(40px,-40px) scale(1.1); }
+  }
+
+  /* Navbar minimaliste */
+  .top-bar {
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.3s;
+  }
+  .back-btn:hover { color: var(--fg); }
+
+  /* Conteneur principal */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Cartes de choix */
+  .choice-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 50px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .choice-card {
+    flex: 1;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 50px 40px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--fg);
+    backdrop-filter: blur(20px);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, var(--hover-color), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .choice-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--border-hover);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 60px var(--hover-shadow);
+  }
+  .choice-card:hover::before {
+    opacity: 1;
+  }
+
+  .icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin: 0 auto 24px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    transition: transform 0.4s, box-shadow 0.4s;
+    position: relative;
+    z-index: 2;
+  }
+
+  .choice-card:hover .icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+    background: var(--icon-bg-hover);
+    border-color: transparent;
+    color: white !important;
+  }
+
+  .card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .card-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Couleurs spécifiques aux cartes */
+  .card-vente {
+    --hover-color: rgba(0, 229, 255, 0.1);
+    --border-hover: rgba(0, 229, 255, 0.3);
+    --hover-shadow: rgba(0, 229, 255, 0.15);
+    --icon-bg-hover: #00e5ff;
+  }
+  .card-vente .icon-wrapper { color: #00e5ff; }
+
+  .card-reparation {
+    --hover-color: rgba(255, 145, 0, 0.1);
+    --border-hover: rgba(255, 145, 0, 0.3);
+    --hover-shadow: rgba(255, 145, 0, 0.15);
+    --icon-bg-hover: #ff9100;
+  }
+  .card-reparation .icon-wrapper { color: #ff9100; }
+
+  @media (max-width: 768px) {
+    .choice-container { flex-direction: column; }
+    .choice-card { padding: 40px 20px; }
+  }
+
+</style>
+<script>
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+</script>
+</head>
+<body>
+
+  <!-- Blobs -->
+  <div class="blob" style="width:400px;height:400px;background:#00e5ff;top:-100px;left:-100px;opacity:0.15;"></div>
+  <div class="blob" style="width:500px;height:500px;background:#ff9100;bottom:-150px;right:-100px;opacity:0.1;animation-delay:-3s;"></div>
+
+  <div class="top-bar">
+    <a href="index.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Retour à l'accueil
+    </a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="font-display font-bold text-lg">DZMobile <span style="color:var(--accent);">Pro</span></span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <h1 class="font-display" style="font-size:clamp(2rem, 5vw, 3rem);font-weight:700;text-align:center;">Que souhaitez-vous faire ?</h1>
+    <p style="color:var(--muted);margin-top:16px;font-size:1.1rem;text-align:center;">Sélectionnez votre espace de travail pour continuer.</p>
+
+    <div class="choice-container">
+      <!-- Option Vente -->
+      <a href="vente.html" class="choice-card card-vente">
+        <div class="icon-wrapper">
+          <i class="fas fa-cart-shopping"></i>
+        </div>
+        <h2 class="font-display card-title">Espace Vente</h2>
+        <p class="card-desc">Accédez à la caisse, gérez vos ventes de téléphones, accessoires et facturez vos clients rapidement.</p>
+      </a>
+
+      <!-- Option Réparation -->
+      <a href="reparation.html" class="choice-card card-reparation">
+        <div class="icon-wrapper">
+          <i class="fas fa-screwdriver-wrench"></i>
+        </div>
+        <h2 class="font-display card-title">Espace Réparation</h2>
+        <p class="card-desc">Suivez les appareils en réparation, mettez à jour les statuts et gérez vos pièces détachées.</p>
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

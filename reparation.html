@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DZMobile Pro — Espace Réparation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #06080d;
+    --card: rgba(14,20,32,0.72);
+    /* Thème Réparation : Orange / Rose */
+    --accent: #ff9100;
+    --accent-soft: rgba(255,145,0,0.12);
+    --accent-glow: rgba(255,145,0,0.25);
+    --border: rgba(255,145,0,0.15);
+    
+    --fg: #e4e9f0;
+    --muted: #6b7d96;
+    --cyan: #00e5ff;
+    --rose: #ff4081;
+    --green: #00e676;
+    
+    --glass-bg: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.06);
+    --glass-hover: rgba(255,255,255,0.08);
+    --btn-sec-border: rgba(228,233,240,0.15);
+    --icon-text: #06080d;
+  }
+
+  [data-theme="light"] {
+    --bg: #f8fafc;
+    --card: rgba(255,255,255,0.85);
+    --accent: #e65100; 
+    --accent-soft: rgba(230,81,0,0.12);
+    --accent-glow: rgba(230,81,0,0.2);
+    --border: rgba(230,81,0,0.2);
+    
+    --fg: #0f172a;
+    --muted: #475569;
+    
+    --glass-bg: rgba(0,0,0,0.03);
+    --glass-border: rgba(0,0,0,0.08);
+    --glass-hover: rgba(0,0,0,0.06);
+    --btn-sec-border: rgba(15,23,42,0.15);
+    --icon-text: #ffffff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--accent-soft) var(--bg); transition: background-color 0.3s; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--fg); overflow:hidden; transition: background-color 0.3s, color 0.3s; height: 100vh; display: flex; }
+  h1,h2,h3,h4,h5,h6,.font-display { font-family:'Space Grotesk',sans-serif; }
+
+  /* ---- Print Styles ---- */
+  #print-area { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    html, body { background: white !important; color: black !important; margin: 0; padding: 0; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area {
+      display: block; position: absolute; left: 0; top: 0;
+      width: 80mm;
+      padding: 5mm;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: black !important;
+      background: white !important;
+    }
+    .print-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed black; padding-bottom: 5px; }
+    .print-title { font-family: 'Space Grotesk', sans-serif; font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+    .print-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .print-total { font-weight: bold; font-size: 14px; border-top: 1px dashed black; padding-top: 5px; margin-top: 5px; display: flex; justify-content: space-between; }
+    .print-footer { text-align: center; margin-top: 10px; font-size: 10px; border-top: 1px dashed black; padding-top: 5px; }
+    * { box-shadow: none !important; text-shadow: none !important; }
+  }
+
+  /* ---- Canvas & Blobs ---- */
+  #particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .blob {
+    position:absolute; border-radius:50%; filter:blur(120px); opacity:0.35;
+    animation: blobFloat 12s ease-in-out infinite alternate; pointer-events:none; z-index:0;
+  }
+  @keyframes blobFloat {
+    0% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px,-40px) scale(1.1); }
+    100% { transform: translate(-20px,20px) scale(0.95); }
+  }
+
+  /* ---- Utilities ---- */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent), var(--rose));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .badge {
+    display:inline-flex; align-items:center; gap:6px;
+    padding: 6px 16px; border-radius:99px; font-size:0.8rem; font-weight:600;
+    background: var(--accent-soft); color:var(--accent);
+    border: 1px solid rgba(255,145,0,0.15);
+  }
+  .mock-status {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 12px; border-radius:99px; font-size:0.75rem; font-weight:600;
+  }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding: 12px 24px; border-radius:12px; font-weight:600;
+    font-family:'Space Grotesk',sans-serif; font-size:0.9rem;
+    background: var(--accent); color:var(--icon-text);
+    border:none; cursor:pointer;
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    text-decoration:none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--accent-glow), 0 0 40px rgba(255,145,0,0.15);
+  }
+
+  .btn-secondary {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding: 12px 24px; border-radius:12px; font-weight:600;
+    font-family:'Space Grotesk',sans-serif; font-size:0.9rem;
+    background: transparent; color:var(--fg);
+    border: 1.5px solid var(--btn-sec-border);
+    cursor:pointer; transition:all 0.3s; text-decoration:none;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent); color:var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ---- Cards ---- */
+  .glass-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    backdrop-filter: blur(12px) saturate(1.5);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    z-index: 10;
+  }
+  .glass-card-hover:hover {
+    border-color: rgba(255,145,0,0.25);
+    box-shadow: 0 8px 48px rgba(255,145,0,0.08);
+    transform: translateY(-2px);
+  }
+
+  /* ---- Layout ---- */
+  .app-container {
+    display: flex; width: 100%; height: 100vh; padding: 24px; gap: 24px; position: relative; z-index: 10;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar {
+    width: 280px; display: flex; flex-direction: column; padding: 24px; flex-shrink: 0;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 40px; text-decoration: none;
+  }
+  .nav-links {
+    display: flex; flex-direction: column; gap: 8px; flex: 1;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px;
+    color: var(--muted); font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; border: 1px solid transparent;
+  }
+  .nav-item i { font-size: 1.1rem; width: 24px; text-align: center; }
+  .nav-item:hover {
+    background: var(--glass-bg); color: var(--fg); border-color: var(--glass-border); transform: translateX(4px);
+  }
+  .nav-item.active {
+    background: var(--accent-soft); color: var(--accent); border-color: rgba(255,145,0,0.2); box-shadow: 0 4px 20px rgba(255,145,0,0.05);
+  }
+
+  /* ---- Main Content ---- */
+  .main-content {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;
+  }
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+  }
+  .sections-wrapper {
+    flex: 1; overflow-y: auto; padding-right: 12px; padding-bottom: 24px; scrollbar-width: thin; scrollbar-color: var(--accent-soft) transparent;
+  }
+  .sections-wrapper::-webkit-scrollbar { width: 6px; }
+  .sections-wrapper::-webkit-scrollbar-thumb { background: var(--accent-soft); border-radius: 10px; }
+
+  .content-section { display: none; animation: fadeSlideUp 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .content-section.active { display: block; }
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-title { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700; line-height: 1.1; margin-bottom: 24px; }
+
+  /* ---- Tables & Grid ---- */
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .mock-table th { text-align: left; padding: 16px; border-bottom: 1px solid var(--glass-border); color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mock-table td { padding: 18px 16px; border-bottom: 1px solid var(--glass-bg); color: var(--fg); }
+  .mock-table tr { transition: background-color 0.2s; }
+  .mock-table tr:hover { background: rgba(255,255,255,0.02); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .mock-stat-card { padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+  .stat-val { font-family:'Space Grotesk',sans-serif; font-size: 2.2rem; font-weight: 700; color: var(--fg); }
+  .stat-label { font-size: 0.9rem; color: var(--muted); }
+
+  /* ---- Forms ---- */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .input-group { display: flex; flex-direction: column; gap: 8px; }
+  .input-group label { font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .input-group input, .input-group textarea, .input-group select {
+    width: 100%; padding: 14px 18px; background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+    border-radius: 12px; color: var(--fg); font-size: 0.95rem; font-family: 'DM Sans',sans-serif;
+    transition: all 0.3s; outline: none;
+  }
+  .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); background: var(--card);
+  }
+  .full-width { grid-column: 1 / -1; }
+
+</style>
+<script>
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) { document.documentElement.setAttribute('data-theme', savedTheme); }
+</script>
+</head>
+<body>
+
+  <!-- Zone d'impression invisible -->
+  <div id="print-area">
+    <div class="print-header">
+      <div class="print-title">DZMobile Pro</div>
+      <div>123 Rue Principale, Alger</div>
+      <div>Tél: 0555 00 00 00</div>
+      <div style="font-weight: bold; margin-top: 5px; font-size: 14px;">BON D'INTERVENTION</div>
+    </div>
+    <div style="margin-bottom: 10px; font-size: 11px;">
+      Date: <span id="print-date"></span><br>
+      Bon N°: <span id="print-id"></span>
+    </div>
+    <div id="print-client" style="margin-bottom: 10px; font-size: 11px; border-bottom: 1px dashed black; padding-bottom: 5px;">
+      <!-- Injecté via JS -->
+    </div>
+    <div id="print-items" style="margin-bottom: 10px;">
+      <!-- Injecté via JS -->
+    </div>
+    <div class="print-total">
+      <span>Reste à payer</span>
+      <span id="print-total-amount">0 DA</span>
+    </div>
+    <div class="print-footer">
+      Merci de votre confiance !<br>
+      Veuillez présenter ce reçu pour récupérer votre appareil.
+    </div>
+  </div>
+
+  <!-- Blobs décoratifs -->
+  <div class="blob" style="width:500px;height:500px;background:var(--accent);top:-100px;left:-150px;animation-delay:0s;"></div>
+  <div class="blob" style="width:400px;height:400px;background:var(--rose);bottom:-50px;right:20%;animation-delay:-4s;opacity:0.15;"></div>
+  
+  <!-- Particules -->
+  <canvas id="particles"></canvas>
+
+  <div class="app-container">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar glass-card">
+      <a href="dashboard.html" class="sidebar-logo" style="margin-bottom:24px;">
+        <span class="font-display font-bold text-xl" style="color:var(--fg);">DZMobile <span style="color:var(--accent);">Pro</span></span>
+      </a>
+
+      <!-- WORKSPACE SWITCHER -->
+      <div style="display:flex; background:var(--glass-bg); border-radius:12px; padding:4px; margin-bottom:24px; border:1px solid var(--glass-border);">
+        <a href="vente.html" style="flex:1; text-align:center; padding:8px 0; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; color:var(--muted); transition:color 0.3s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">
+          <i class="fas fa-cart-shopping"></i> Vente
+        </a>
+        <a href="reparation.html" style="flex:1; text-align:center; padding:8px 0; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; background:var(--accent); color:var(--icon-text); box-shadow:0 2px 10px var(--accent-glow);">
+          <i class="fas fa-screwdriver-wrench"></i> Atelier
+        </a>
+      </div>
+
+      <div class="nav-links">
+        <div class="nav-item active" data-target="nouvelle-reparation">
+          <i class="fas fa-plus-circle"></i> Nouvelle Réparation
+        </div>
+        <div class="nav-item" data-target="suivi">
+          <i class="fas fa-list-check"></i> Suivi des Réparations
+        </div>
+
+        <div class="nav-item" data-target="bons">
+          <i class="fas fa-file-invoice"></i> Bons & Reçus
+        </div>
+        <div class="nav-item" data-target="imprimante" style="margin-top: 16px; border-top: 1px dashed var(--glass-border); padding-top: 24px; border-radius: 0;">
+          <i class="fas fa-print"></i> Paramètres Imprimante
+        </div>
+      </div>
+
+      <div style="margin-top: auto;">
+        <div style="padding: 16px; border-radius: 14px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 16px;">
+          <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 4px;">Connecté en tant que</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--icon-text); display:flex; align-items:center; justify-content:center; font-weight:700;">A</div>
+            <div style="font-weight: 600; font-size: 0.9rem;">Admin</div>
+          </div>
+        </div>
+        <a href="dashboard.html" class="btn-secondary" style="width: 100%;">
+          <i class="fas fa-arrow-left"></i> Quitter Réparation
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <div class="top-bar">
+        <div class="badge">
+          <i class="fas fa-screwdriver-wrench" style="font-size:0.75rem;"></i> Espace Réparation
+        </div>
+        <div style="display:flex; gap:16px; align-items:center;">
+          <button class="btn-secondary" style="padding:4px 12px; font-weight:700; font-size:0.85rem; border-color:var(--glass-border); border-radius:8px;" onclick="toggleLanguage()">
+            <span id="lang-btn-text">AR</span>
+          </button>
+          <button class="theme-toggle" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;transition:color 0.3s;" aria-label="Toggle theme">
+            <i class="fas fa-sun toggle-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="sections-wrapper">
+        
+        <!-- SECTION: NOUVELLE RÉPARATION -->
+        <div id="nouvelle-reparation" class="content-section active">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Nouvelle Réparation</h2>
+              <p style="color:var(--muted); font-size:1rem;">Créez un bon d'intervention, faites le devis et imprimez le reçu pour le client.</p>
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+            <!-- Formulaire Principal -->
+            <div style="display:flex; flex-direction:column; gap:24px;">
+              
+              <!-- Formulaire Simplifié -->
+              <div class="glass-card" style="padding:30px;">
+                <h3 class="font-display" style="font-size:1.3rem; margin-bottom:24px; color:var(--accent);"><i class="fas fa-file-signature"></i> Fiche d'Intervention</h3>
+                <div class="form-grid">
+                  <div class="input-group">
+                    <label>Nom & Prénom</label>
+                    <input type="text" id="clientName" placeholder="Ex: Amine Kaddour">
+                  </div>
+                  <div class="input-group">
+                    <label>Numéro de Téléphone</label>
+                    <input type="tel" id="clientPhone" placeholder="Ex: 0555 12 34 56">
+                  </div>
+                  <div class="input-group">
+                    <label>Modèle de l'appareil</label>
+                    <input type="text" id="deviceModel" placeholder="Ex: iPhone 13">
+                  </div>
+                  <div class="input-group">
+                    <label>Code (PIN/Schéma)</label>
+                    <input type="text" placeholder="Ex: 123456 ou 'Aucun'">
+                  </div>
+                  <div class="input-group full-width">
+                    <label>Diagnostic</label>
+                    <textarea id="deviceProblem" rows="3" placeholder="Ex: Écran cassé à remplacer..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Ticket / Devis / Paiement -->
+            <div>
+              <div class="glass-card" style="padding:30px; position:sticky; top:0;">
+                <h3 class="font-display" style="font-size:1.3rem; margin-bottom:20px; color:var(--accent);"><i class="fas fa-money-bill-wave"></i> Devis & Paiement</h3>
+                
+                <div class="form-grid" style="display:flex; flex-direction:column; gap:20px;">
+                  <div class="input-group">
+                    <label>Prix total estimé (Devis en DA)</label>
+                    <input type="number" id="totalPrice" placeholder="Ex: 15000" style="font-size:1.2rem; font-weight:700; color:var(--fg);" oninput="calculateRemaining()">
+                  </div>
+                  <div class="input-group">
+                    <label>Montant payé d'avance (Acompte en DA)</label>
+                    <input type="number" id="paidAdvance" placeholder="Ex: 5000" style="font-size:1.2rem; font-weight:700; color:var(--green);" oninput="calculateRemaining()">
+                  </div>
+                  
+                  <div style="margin-top:10px; padding-top:20px; border-top:1px dashed var(--glass-border);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                      <span style="color:var(--muted);">Total Devis</span>
+                      <span style="font-weight:600;" id="summaryTotal">0 DA</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                      <span style="color:var(--muted);">Avance (Acompte)</span>
+                      <span style="font-weight:600; color:var(--green);" id="summaryAdvance">- 0 DA</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:16px; font-size:1.4rem; font-weight:700; font-family:'Space Grotesk',sans-serif;">
+                      <span>Reste à payer</span>
+                      <span style="color:var(--rose);" id="summaryRemaining">0 DA</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px;">
+                  <button class="btn-primary" style="width:100%; padding:16px; font-size:1rem;" onclick="printReparationReceipt()">
+                    <i class="fas fa-print"></i> Générer & Imprimer le Reçu
+                  </button>
+                  <button class="btn-secondary" style="width:100%;">
+                    <i class="fas fa-paper-plane"></i> Envoyer Reçu par SMS
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: SUIVI DES RÉPARATIONS -->
+        <div id="suivi" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Suivi des Réparations</h2>
+              <p style="color:var(--muted); font-size:1rem;">Gérez l'avancement des appareils dans l'atelier.</p>
+            </div>
+            <div class="input-group" style="width:300px;">
+              <input type="text" placeholder="Rechercher (Nom, Modèle, ID)..." style="padding:10px 16px;">
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">En attente de diagnostic</div>
+              <div class="stat-val" id="stat-attente" style="color:var(--rose);">0</div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Réparations en cours</div>
+              <div class="stat-val" style="color:var(--accent);">0</div>
+            </div>
+            <div class="glass-card mock-stat-card">
+              <div class="stat-label">Prêt à être récupéré</div>
+              <div class="stat-val" style="color:var(--green);">0</div>
+            </div>
+          </div>
+          
+          <div class="glass-card" style="padding:10px;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th>N° Bon</th>
+                  <th>Client</th>
+                  <th>Appareil & Panne</th>
+                  <th>Statut</th>
+                  <th>Reste à payer</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="suivi-tbody">
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">Aucune réparation en cours.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION: IMPRIMANTE -->
+        <div id="imprimante" class="content-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+            <div>
+              <h2 class="page-title gradient-text" style="margin-bottom:8px;">Configuration Imprimante</h2>
+              <p style="color:var(--muted); font-size:1rem;">Gérez l'impression de vos reçus et tickets de caisse via le Wi-Fi.</p>
+            </div>
+            <button class="btn-primary" onclick="testPrint()"><i class="fas fa-print"></i> Lancer une impression test</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+            <div class="glass-card" style="padding:30px;">
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+                <div style="width:60px; height:60px; border-radius:16px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--accent);">
+                  <i class="fas fa-print"></i>
+                </div>
+                <div>
+                  <h3 class="font-display" style="font-size:1.4rem;">Statut de la connexion</h3>
+                  <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <div style="width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green);"></div>
+                    <span style="color:var(--green); font-weight:600;">Prêt à imprimer</span>
+                  </div>
+                </div>
+              </div>
+              <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:24px;">
+                Le système utilise la connexion native de votre navigateur. Assurez-vous que votre imprimante thermique est allumée et connectée au même réseau Wi-Fi que cet appareil (PC/Tablette).
+              </p>
+              <div class="input-group">
+                <select style="appearance:none; padding-left:16px;">
+                  <option>Ticket Thermique (80mm) - Recommandé</option>
+                  <option>Ticket Thermique (58mm)</option>
+                  <option>Format A4 Standard</option>
+                </select>
+                <i class="fas fa-chevron-down" style="position:absolute; right:20px; top:50%; pointer-events:none; color:var(--muted); font-size: 1rem !important;"></i>
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding:30px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+              <i class="fas fa-receipt" style="font-size:4rem; color:var(--muted); margin-bottom:20px; opacity:0.5;"></i>
+              <h3 class="font-display" style="font-size:1.2rem; margin-bottom:12px;">Comment imprimer ?</h3>
+              <p style="color:var(--muted); font-size:0.9rem; line-height:1.6;">
+                1. Cliquez sur "Générer & Imprimer le Reçu".<br>
+                2. La fenêtre système s'ouvre.<br>
+                3. Sélectionnez votre imprimante Wi-Fi dans la liste.<br>
+                4. Décochez "Marges" et "En-têtes et pieds de page" dans les options pour un ticket propre.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Autres sections vides -->
+
+        <div id="bons" class="content-section">
+          <h2 class="page-title gradient-text">Bons & Reçus</h2>
+          <p style="color:var(--muted);">Archive numérique des bons imprimés.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+<script>
+  /* ===== TRANSLATION LOGIC ===== */
+  const translations = {
+    "Nouvelle Réparation": "إصلاح جديد",
+    "Suivi des Réparations": "متابعة الإصلاحات",
+    "Bons & Reçus": "الفواتير والإيصالات",
+    "Paramètres Imprimante": "إعدادات الطابعة",
+    "Connecté en tant que": "مسجل كـ",
+    "Quitter Réparation": "الخروج من الإصلاح",
+    "Espace Réparation": "مساحة الإصلاح",
+    "Fiche d'Intervention": "بطاقة التدخل",
+    "Nom & Prénom": "الاسم واللقب",
+    "Numéro de Téléphone": "رقم الهاتف",
+    "Modèle de l'appareil": "موديل الجهاز",
+    "Code (PIN/Schéma)": "الرمز (PIN/نمط)",
+    "Diagnostic": "التشخيص",
+    "Devis & Paiement": "التقدير والدفع",
+    "Prix total estimé (Devis en DA)": "السعر الإجمالي المقدر (بالدينار)",
+    "Montant payé d'avance (Acompte en DA)": "المبلغ المدفوع مقدمًا (بالدينار)",
+    "Total Devis": "إجمالي التقدير",
+    "Avance (Acompte)": "مقدم (عربون)",
+    "Reste à payer": "المتبقي للدفع",
+    "Générer & Imprimer le Reçu": "إنشاء وطباعة الإيصال",
+    "Envoyer Reçu par SMS": "إرسال الإيصال عبر رسالة قصيرة",
+    "En attente de diagnostic": "في انتظار التشخيص",
+    "Réparations en cours": "إصلاحات قيد التقدم",
+    "Prêt à être récupéré": "جاهز للاستلام",
+    "Client / Contact": "الزبون / الاتصال",
+    "Appareil & Problème": "الجهاز والمشكلة",
+    "Reçu & Avance": "الإيصال والمقدم",
+    "Statut": "الحالة",
+    "Actions": "إجراءات",
+    "Vente": "بيع",
+    "Atelier": "ورشة",
+    "Modifiez l'état d'avancement pour notifier le client.": "تغيير حالة التقدم لإبلاغ الزبون.",
+    "Créez un bon d'intervention, faites le devis et imprimez le reçu pour le client.": "أنشئ بطاقة تدخل، قدم تقديراً واطبع الإيصال للزبون.",
+    "Archive numérique des bons imprimés.": "الأرشيف الرقمي للفواتير المطبوعة.",
+    "Gérez l'avancement des appareils dans l'atelier.": "إدارة تقدم الأجهزة في الورشة.",
+    "En attente": "في الانتظار",
+    "En cours": "قيد التقدم",
+    "Attente pièce": "انتظار القطعة",
+    "Prêt (Réparé)": "جاهز (تم الإصلاح)"
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'fr';
+
+  function applyTranslations(root) {
+    if (currentLang === 'fr') return;
+    
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    const nodesToReplace = [];
+    while(node = walker.nextNode()) {
+      const text = node.nodeValue.trim();
+      if(translations[text]) {
+        const leading = node.nodeValue.match(/^\s*/)[0];
+        const trailing = node.nodeValue.match(/\s*$/)[0];
+        nodesToReplace.push({node, text: leading + translations[text] + trailing});
+      }
+    }
+    nodesToReplace.forEach(item => item.node.nodeValue = item.text);
+    
+    root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        const ph = el.getAttribute('placeholder');
+        if(translations[ph]) el.setAttribute('placeholder', translations[ph]);
+    });
+  }
+
+  function toggleLanguage() {
+    currentLang = currentLang === 'fr' ? 'ar' : 'fr';
+    localStorage.setItem('lang', currentLang);
+    window.location.reload();
+  }
+
+  function initLanguage() {
+    const btn = document.getElementById('lang-btn-text');
+    if (currentLang === 'ar') {
+        document.documentElement.dir = 'rtl';
+        if(btn) btn.innerText = 'FR';
+    } else {
+        document.documentElement.dir = 'ltr';
+        if(btn) btn.innerText = 'AR';
+    }
+  }
+  initLanguage();
+  document.addEventListener('DOMContentLoaded', () => applyTranslations(document.body));
+
+  // UI Calculations
+  function calculateRemaining() {
+    const total = parseFloat(document.getElementById('totalPrice').value) || 0;
+    const advance = parseFloat(document.getElementById('paidAdvance').value) || 0;
+    const remaining = total - advance;
+    
+    document.getElementById('summaryTotal').innerText = total + ' DA';
+    document.getElementById('summaryAdvance').innerText = '- ' + advance + ' DA';
+    document.getElementById('summaryRemaining').innerText = Math.max(0, remaining) + ' DA';
+  }
+
+  // Tabs Navigation
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.content-section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(nav => nav.classList.remove('active'));
+      sections.forEach(sec => sec.classList.remove('active'));
+      
+      item.classList.add('active');
+      const targetId = item.getAttribute('data-target');
+      document.getElementById(targetId).classList.add('active');
+    });
+  });
+
+  // Theme Toggle
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcons(newTheme);
+  }
+
+  function updateThemeIcons(theme) {
+    const isLight = theme === 'light';
+    document.querySelectorAll('.toggle-icon').forEach(icon => {
+      icon.className = isLight ? 'fas fa-moon toggle-icon' : 'fas fa-sun toggle-icon';
+    });
+  }
+
+  const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  updateThemeIcons(initialTheme);
+
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.addEventListener('click', toggleTheme);
+  });
+
+  /* ===== Print Logic ===== */
+  function getFormattedDate() {
+    const d = new Date();
+    return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+  }
+
+  function printReparationReceipt() {
+    const nameInput = document.getElementById('clientName');
+    const phoneInput = document.getElementById('clientPhone');
+    const modelInput = document.getElementById('deviceModel');
+    const problemInput = document.getElementById('deviceProblem');
+    const totalInput = document.getElementById('totalPrice');
+    const advanceInput = document.getElementById('paidAdvance');
+
+    const name = nameInput.value || 'Client Non Renseigné';
+    const phone = phoneInput.value || 'N/A';
+    const model = modelInput.value || 'Appareil Non Renseigné';
+    const problem = problemInput ? problemInput.value : 'Non spécifié';
+    const total = parseFloat(totalInput.value) || 0;
+    const advance = parseFloat(advanceInput.value) || 0;
+    const remaining = Math.max(0, total - advance);
+
+    const ticketId = 'REP-' + Math.floor(Math.random() * 10000);
+
+    // --- 1. Impression ---
+    document.getElementById('print-date').innerText = getFormattedDate();
+    document.getElementById('print-id').innerText = ticketId;
+    
+    document.getElementById('print-client').innerHTML = `
+      <strong>Client:</strong> ${name}<br>
+      <strong>Téléphone:</strong> ${phone}<br>
+      <strong>Appareil:</strong> ${model}
+    `;
+
+    document.getElementById('print-items').innerHTML = `
+      <div class="print-row"><span>Diagnostic & Réparation</span><span>${total} DA</span></div>
+      <div class="print-row" style="color:gray;"><span>Acompte versé</span><span>- ${advance} DA</span></div>
+    `;
+    document.getElementById('print-total-amount').innerText = remaining + ' DA';
+    
+    window.print();
+
+    // --- 2. Ajouter au tableau Suivi ---
+    const tbody = document.getElementById('suivi-tbody');
+    
+    // Supprime la ligne "Aucune réparation"
+    if (tbody.innerHTML.includes('Aucune réparation en cours')) {
+      tbody.innerHTML = '';
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-family:monospace; font-weight:600;">#${ticketId}</td>
+      <td><div style="font-weight:600;">${name}</div><div style="font-size:0.8rem;color:var(--muted);">${phone}</div></td>
+      <td><div style="font-weight:600;">${model}</div><div style="font-size:0.8rem;color:var(--muted);">${problem}</div></td>
+      <td>
+        <select onchange="updateStatusColor(this)" style="background:var(--card); border:1px solid var(--glass-border); color:var(--rose); padding:4px 8px; border-radius:6px; outline:none; font-size:0.8rem; font-weight:600; cursor:pointer;">
+          <option value="attente" style="color:var(--rose);">En attente</option>
+          <option value="cours" style="color:var(--accent);">En cours</option>
+          <option value="piece" style="color:var(--orange);">Attente pièce</option>
+          <option value="pret" style="color:var(--green);">Prêt (Réparé)</option>
+        </select>
+      </td>
+      <td style="font-weight:600;">${remaining} DA</td>
+      <td>
+        <button class="btn-secondary" style="padding:6px 10px; font-size:0.8rem;" title="Notifier"><i class="fas fa-sms"></i></button>
+        <button class="btn-primary" style="padding:6px 10px; font-size:0.8rem; border-radius:8px;" onclick="this.closest('tr').remove()" title="Livrer"><i class="fas fa-check"></i></button>
+      </td>
+    `;
+    tbody.insertBefore(tr, tbody.firstChild);
+    if(currentLang === 'ar') applyTranslations(tr);
+
+    // Mettre à jour le compteur
+    const attenteCounter = document.getElementById('stat-attente');
+    if (attenteCounter) {
+      attenteCounter.innerText = parseInt(attenteCounter.innerText) + 1;
+    }
+
+    // --- 3. Vider le formulaire ---
+    nameInput.value = '';
+    phoneInput.value = '';
+    modelInput.value = '';
+    if(problemInput) problemInput.value = '';
+    totalInput.value = '';
+    advanceInput.value = '';
+    calculateRemaining(); // Remet les totaux à zéro
+  }
+
+  function updateStatusColor(selectElement) {
+    const val = selectElement.value;
+    if (val === 'attente') selectElement.style.color = 'var(--rose)';
+    else if (val === 'cours') selectElement.style.color = 'var(--accent)';
+    else if (val === 'piece') selectElement.style.color = 'var(--orange)';
+    else if (val === 'pret') selectElement.style.color = 'var(--green)';
+  }
+
+  function testPrint() {
+    document.getElementById('print-date').innerText = getFormattedDate();
+    document.getElementById('print-id').innerText = 'TEST-' + Math.floor(Math.random() * 10000);
+    
+    document.getElementById('print-client').innerHTML = `<strong>Impression de Test</strong>`;
+    
+    document.getElementById('print-items').innerHTML = `
+      <div class="print-row"><span>Test d'impression Wi-Fi</span><span>0 DA</span></div>
+      <div class="print-row"><span>Connexion Système</span><span>OK</span></div>
+    `;
+    document.getElementById('print-total-amount').innerText = '0 DA';
+    
+    window.print();
+  }
+
+  /* ===== Particules Canvas ===== */
+  (function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [];
+    const PARTICLE_COUNT = 50;
+
+    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 1.5 + 0.5, opacity: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    let mouse = { x: -1000, y: -1000 };
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const rgbColors = isLight ? '230,81,0' : '255,145,0';
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+
+        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.r), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(' + rgbColors + ',' + p.opacity + ')'; ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+          if (dist < 140) {
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = 'rgba(' + rgbColors + ',' + ((1 - dist/140)*0.15) + ')';
+            ctx.lineWidth = 0.6; ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+</script>
+</body>
+</html>
